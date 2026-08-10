@@ -1,0 +1,9 @@
+{
+  "name": "liuyao-engine",
+  "version": "1.0.0",
+  "description": "六爻纳甲装卦引擎——依《增删卜易》《卜筮正宗》实现的确定性排盘 + 受规范约束的 AI 解卦框架",
+  "main": "liuyao.js",
+  "scripts": { "test": "node test.js" },
+  "engines": { "node": ">=18" },
+  "license": "MIT"
+}
