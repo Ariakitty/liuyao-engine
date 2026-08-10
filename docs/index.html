@@ -66,6 +66,8 @@ td{padding:8px 4px;border-bottom:1px solid #f6ece8;text-align:center;white-space
     <div class="meta" id="meta"></div>
     <div class="gua-name" id="guaName"></div>
     <table id="yaoTable"></table>
+    <button class="go" id="aiBtn" style="margin-top:18px">请 AI 解 卦</button>
+    <div id="aiOut" style="display:none;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);font-size:14px;line-height:2;white-space:pre-wrap"></div>
   </div>
 
   <p class="foot">
@@ -110,8 +112,47 @@ $('#castBtn').onclick = () => {
       <td>${y.bianGanZhi?'→ '+y.bianGanZhi.ganZhi+'·'+y.bianGanZhi.liuQin:''}</td>
     </tr>`).join('');
     $('#result').classList.add('on');
+    $('#aiBtn').style.display = '';
+    $('#aiOut').style.display = 'none';
+    $('#aiOut').textContent = '';
+    window.__lastCast = r;
     $('#result').scrollIntoView({behavior:'smooth'});
   } catch (e) { $('#err').textContent = e.message; }
+};
+
+// AI 解卦：把这一卦的摇掷结果原样发给服务端复算同一张盘，流式返回解读
+$('#aiBtn').onclick = async () => {
+  const r = window.__lastCast;
+  if (!r) return;
+  const btn = $('#aiBtn'), out = $('#aiOut');
+  btn.disabled = true; btn.textContent = '解 卦 中 …';
+  out.style.display = 'block'; out.textContent = '';
+  try {
+    const resp = await fetch('https://gua.ariakitty.com/api/divine', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ question: r.question, method: 'coins', tosses: r.tosses, time: r.time })
+    });
+    if (resp.status === 429) { out.textContent = (await resp.json()).error; btn.style.display='none'; return; }
+    if (!resp.ok) throw new Error('解卦服务开小差了（' + resp.status + '）');
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '', started = false;
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, {stream:true});
+      if (!started) {
+        const sep = buf.indexOf('\x1e');
+        if (sep < 0) continue;
+        buf = buf.slice(sep + 1); started = true;
+      }
+      out.textContent += buf; buf = '';
+    }
+    btn.style.display = 'none';
+  } catch (e) {
+    out.textContent = '解卦没成功：' + e.message;
+    btn.disabled = false; btn.textContent = '请 AI 解 卦';
+  }
 };
 </script>
 </body>

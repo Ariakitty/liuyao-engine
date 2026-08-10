@@ -47,7 +47,18 @@ node cli.js "最近的工作机会如何"
 node cli.js "最近的工作机会如何" 2,2,2,0,1,1
 ```
 
-AI 解卦（可选，接任意 OpenAI 兼容接口）：
+**在线解卦 API**（试玩页的"请 AI 解卦"即走此接口，任何前端可直接调用，流式返回）：
+
+```bash
+curl -N -X POST https://gua.ariakitty.com/api/divine \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"要问的事","method":"random"}'
+# 也可传 method:"coins" + tosses:[...] 解读真实摇掷
+# 首帧为卦盘 JSON，\x1e 分隔符之后为解卦文本流
+# 限流：每 IP 每小时 10 次，全站每日 200 次
+```
+
+自建 AI 解卦（接任意 OpenAI 兼容接口）：
 
 ```bash
 export LIUYAO_LLM_URL=https://api.example.com/v1/chat/completions
