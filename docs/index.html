@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>六爻占卜 · 纳甲装卦引擎</title>
+<style>
+:root{--cream:#fff8f0;--paper:#fffdf9;--ink:#594e55;--muted:#8b7b80;--pink:#d99a9e;--pink-deep:#b8737b;--mint:#9fc9b7;--blue:#91afc4;--line:#f0e2dd}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100dvh;background:radial-gradient(circle at 10% 8%,#f8dfe0 0 7%,transparent 22%),radial-gradient(circle at 92% 20%,#dcecf0 0 6%,transparent 20%),linear-gradient(155deg,#fff8f0,#fffdf8 55%,#f3fbf5);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+main{max-width:640px;margin:0 auto;padding:34px 18px 60px}
+h1{font-size:26px;margin:8px 0 6px;text-align:center;letter-spacing:.06em}
+.sub{text-align:center;color:var(--muted);font-size:13px;margin:0 0 24px;line-height:1.8}
+.card{background:rgba(255,253,249,.9);border:1px solid rgba(218,179,176,.45);border-radius:24px;padding:20px;box-shadow:0 16px 44px rgba(121,91,91,.12);backdrop-filter:blur(10px)}
+label{font-size:13px;color:var(--muted);display:block;margin:0 0 6px 4px}
+input[type=text]{width:100%;border:1.5px solid var(--line);border-radius:15px;background:#fff;padding:13px 15px;font-size:16px;color:var(--ink);outline:0}
+input[type=text]:focus{border-color:#c98e94;box-shadow:0 0 0 4px #e7b9bc2e}
+.modes{display:flex;gap:8px;margin:14px 0}
+.mode{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:13px;padding:10px;font-size:13px;color:var(--muted);text-align:center;cursor:pointer}
+.mode.on{border-color:var(--pink);color:var(--pink-deep);font-weight:700;background:#fdf3f2}
+#coinsBox{display:none;margin:4px 0 10px}
+#coinsBox.on{display:block}
+.coin-hint{font-size:12px;color:var(--muted);line-height:1.7;margin:0 0 8px 4px}
+.coin-row{display:flex;gap:6px}
+.coin-row select{flex:1;border:1.5px solid var(--line);border-radius:11px;background:#fff;padding:9px 4px;font-size:14px;color:var(--ink)}
+button.go{width:100%;margin-top:14px;border:0;border-radius:16px;padding:15px;background:linear-gradient(145deg,#dba1a4,#c98188);color:#fff;font-size:16px;font-weight:700;letter-spacing:.2em;cursor:pointer;box-shadow:0 8px 18px #c47d8545}
+button.go:active{transform:scale(.98)}
+#result{display:none;margin-top:22px}
+#result.on{display:block}
+.meta{font-size:13px;color:var(--muted);line-height:2;border-bottom:1px dashed var(--line);padding-bottom:12px;margin-bottom:14px}
+.meta b{color:var(--ink)}
+.gua-name{font-size:19px;font-weight:750;margin:0 0 12px;text-align:center}
+.gua-name small{color:var(--muted);font-weight:400;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td{padding:8px 4px;border-bottom:1px solid #f6ece8;text-align:center;white-space:nowrap}
+.yao-mark{font-family:ui-monospace,monospace;font-size:15px}
+.dong{color:var(--pink-deep);font-weight:700}
+.shi{display:inline-block;background:#fdeeed;color:var(--pink-deep);border-radius:7px;padding:1px 7px;font-size:11px;font-weight:700}
+.ying{display:inline-block;background:#eaf3f8;color:#5c88a8;border-radius:7px;padding:1px 7px;font-size:11px;font-weight:700}
+.foot{margin-top:26px;text-align:center;font-size:12px;color:var(--muted);line-height:2.2}
+.foot a{color:var(--pink-deep)}
+.err{color:#b35f69;font-size:13px;margin-top:10px;text-align:center}
+</style>
+</head>
+<body>
+<main>
+  <h1>六爻占卜</h1>
+  <p class="sub">正统六爻纳甲筮法 · 依《增删卜易》《卜筮正宗》逐条实现<br>起卦装卦全程确定性计算，可复核、不掺人为</p>
+
+  <div class="card">
+    <label for="q">心中默念所问之事，写下来</label>
+    <input type="text" id="q" placeholder="例如：这个月的工作机会如何" maxlength="60">
+    <div class="modes">
+      <div class="mode on" data-m="random">电脑代摇</div>
+      <div class="mode" data-m="coins">我自己摇了铜钱</div>
+    </div>
+    <div id="coinsBox">
+      <p class="coin-hint">三枚铜钱摇六次，从第一次（初爻）到第六次（上爻），每次记下几个<b>正面（字面）</b>：</p>
+      <div class="coin-row" id="coinSelects"></div>
+    </div>
+    <button class="go" id="castBtn">起 卦</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="card" id="result">
+    <div class="meta" id="meta"></div>
+    <div class="gua-name" id="guaName"></div>
+    <table id="yaoTable"></table>
+  </div>
+
+  <p class="foot">
+    引擎开源 · 规则与数据表全部标注典籍出处<br>
+    <a href="https://github.com/Ariakitty/liuyao-engine" target="_blank" rel="noopener">GitHub: Ariakitty/liuyao-engine</a>　·　前端一行接入：<br>
+    <code>import { cast } from '…/liuyao.browser.mjs'</code><br>
+    结果仅供研究与娱乐，不构成现实决策建议
+  </p>
+</main>
+<script type="module">
+import { cast } from './liuyao.browser.mjs';
+
+const $ = s => document.querySelector(s);
+let method = 'random';
+document.querySelectorAll('.mode').forEach(el => el.onclick = () => {
+  document.querySelectorAll('.mode').forEach(x => x.classList.remove('on'));
+  el.classList.add('on');
+  method = el.dataset.m;
+  $('#coinsBox').classList.toggle('on', method === 'coins');
+});
+$('#coinSelects').innerHTML = Array.from({length:6}, (_,i) =>
+  `<select id="c${i}">${[0,1,2,3].map(n=>`<option value="${n}" ${n===1?'selected':''}>${n}正</option>`).join('')}</select>`).join('');
+
+const MARK = {6:'✕',7:'─',8:'╌',9:'◯'};
+const NAME = {6:'老阴',7:'少阳',8:'少阴',9:'老阳'};
+
+$('#castBtn').onclick = () => {
+  $('#err').textContent = '';
+  try {
+    const question = $('#q').value.trim();
+    const input = { question, method };
+    if (method === 'coins') input.tosses = Array.from({length:6}, (_,i) => +$('#c'+i).value);
+    const r = cast(input);
+    $('#meta').innerHTML = `所问：<b>${r.question.replace(/</g,'&lt;')}</b><br>月建 <b>${r.yueJian}</b> · 日辰 <b>${r.riChen}</b> · 旬空 <b>${r.xunKong.join('、')}</b>`;
+    $('#guaName').innerHTML = `${r.benGua.name} <small>（${r.benGua.gong} · ${r.benGua.gongWuXing}）</small>` + (r.bianGua ? `　→　${r.bianGua.name}` : ' <small>无动爻</small>');
+    $('#yaoTable').innerHTML = [...r.yao].reverse().map(y => `<tr>
+      <td class="yao-mark ${y.dong?'dong':''}">${MARK[y.val]}</td>
+      <td>${NAME[y.val]}${y.dong?'·动':''}</td>
+      <td>${y.liuShen}</td>
+      <td><b>${y.liuQin}</b> ${y.ganZhi}（${y.wuXing}）</td>
+      <td>${y.shiYing==='世'?'<span class="shi">世</span>':y.shiYing==='应'?'<span class="ying">应</span>':''}</td>
+      <td>${y.bianGanZhi?'→ '+y.bianGanZhi.ganZhi+'·'+y.bianGanZhi.liuQin:''}</td>
+    </tr>`).join('');
+    $('#result').classList.add('on');
+    $('#result').scrollIntoView({behavior:'smooth'});
+  } catch (e) { $('#err').textContent = e.message; }
+};
+</script>
+</body>
+</html>

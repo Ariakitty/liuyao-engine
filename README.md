@@ -2,6 +2,18 @@
 
 一个严格依照传统典籍实现的六爻占卜引擎：**起卦、装卦全程确定性计算，AI 只在最后按规范解读，且句句要标注依据。**
 
+**🔮 在线试玩（无需安装）**：https://ariakitty.github.io/liuyao-engine/
+
+**前端一行接入**（浏览器 ESM 模块，无依赖、纯客户端计算，任何网页都能用）：
+
+```html
+<script type="module">
+  import { cast } from 'https://ariakitty.github.io/liuyao-engine/liuyao.browser.mjs';
+  const result = cast({ method: 'random', question: '要问的事' });
+  console.log(result.benGua.name, result.yao);
+</script>
+```
+
 六爻纳甲筮法源自《周易》六十四卦，由汉代京房定型，是传统预测术中规则最完备、结果最可复核的一支。本引擎的规则主要依照清代两部权威典籍——**《增删卜易》**（野鹤老人）与**《卜筮正宗》**（王洪绪）——逐条实现，纳甲表另对照《易冒》，月建日辰的论断地位参照《黄金策》。完整的规则与数据表见 [framework.md](framework.md)，每一节都标注了经典出处，存在流派分歧的地方如实并列各家观点，文末附有对照典籍的自校清单。
 
 ## 为什么说它严谨
